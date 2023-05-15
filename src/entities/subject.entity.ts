@@ -2,8 +2,7 @@ import {
   Column,
   Entity,
   JoinColumn,
-  OneToMany,
-  OneToOne,
+  ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { User } from './user.entity';
@@ -17,6 +16,6 @@ export class Subject {
   title?: string;
 
   @JoinColumn()
-  @OneToOne(() => User, (user) => user.id)
+  @ManyToOne(() => User, (user) => user.id)
   teacher: User;
 }

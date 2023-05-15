@@ -42,6 +42,8 @@ export class AuthGuard implements CanActivate {
 
     const userContext = await this.cacheManager.get<string>(token);
 
+    console.log(userContext);
+
     if (!userContext) {
       throw new ForbiddenException();
     }
