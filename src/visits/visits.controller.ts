@@ -14,6 +14,7 @@ import { VisitMark } from '../entities';
 import { HttpStatusCode } from 'axios';
 import { Roles } from '../auth/roles.decorator';
 import { UserRolesEnum } from '../common/types';
+import { Public } from '../auth/public.decorator';
 
 @Controller('visits')
 @ApiTags('Посещения')
@@ -34,6 +35,7 @@ export class VisitsController {
   }
 
   @Put('set-mark-state')
+  @Roles(UserRolesEnum.Student)
   @HttpCode(HttpStatusCode.Ok)
   @ApiOperation({ summary: 'Метод для отметки пользователя' })
   @ApiBody({
@@ -46,9 +48,9 @@ export class VisitsController {
   }
 
   @Get(':linkId')
+  @Public()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Метод для получения данных о ссылке' })
-  @ApiBearerAuth()
   async getLink(@Param('linkId') linkId: string) {
     return this.visitsService.getLink(linkId);
   }
