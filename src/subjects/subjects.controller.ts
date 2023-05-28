@@ -39,6 +39,18 @@ export class SubjectsController {
     );
   }
 
+  @Get('student')
+  @Roles(UserRolesEnum.Employer)
+  async getStudentSubjects(@Req() request: Request) {
+    const teacherContext = await this.cacheManager.get<string>(
+      request.headers.authorization.split(' ')[1],
+    );
+
+    return this.subjectsService.getTeacherSubjects(
+      +teacherContext.split('_')[1],
+    );
+  }
+
   @Get('students/:id')
   @Roles(UserRolesEnum.Employer)
   async getStudents(@Param('id') id: string, @Req() request: Request) {

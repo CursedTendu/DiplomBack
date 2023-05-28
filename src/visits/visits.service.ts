@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Link, Subject, SubjectsUser, User, VisitMark } from '../entities';
-import { Repository } from 'typeorm';
-import { CreateMarkSession, SetMarkStateDto } from './dto';
+import { FindOptionsWhere, Repository } from 'typeorm';
+import { CreateMarkSession, GetVisitsDto, SetMarkStateDto } from './dto';
 import { generateToken } from '../utils';
 
 @Injectable()
@@ -16,6 +16,69 @@ export class VisitsService {
     @InjectRepository(SubjectsUser)
     private subjectsUserRepository: Repository<SubjectsUser>,
   ) {}
+
+  async getVisits(payload: GetVisitsDto, user: string) {
+    const where: FindOptionsWhere<SubjectsUser> = {};
+    const visitWhere: FindOptionsWhere<VisitMark> = {};
+
+    const [role, userId] = user.split('_');
+
+    if (role === 'сотрудник') {
+      where.subject = { teacher: { userId: +userId } };
+      visitWhere.subject = { teacher: { userId: +userId } };
+    }
+
+    if (role === 'обучающийся') {
+      where.student = { userId: +userId };
+      visitWhere.student = { userId: +userId };
+    }
+
+    if (payload?.subject) {
+      where.subject = { id: payload.subject };
+    }
+
+    if (payload?.group) {
+      where.subject = {  };
+    }
+
+    const subjects = await this.subjectsUserRepository.find({
+      where,
+      relations: ['subject', 'subject.teacher', 'student'],
+    });
+
+    const result = [];
+
+    for (const subjectContext of subjects) {
+      const [skipCount, totalCount] = await Promise.all([
+        this.visitMarkRepository.count({
+          where: {
+            ...visitWhere,
+            state: 0,
+            subject: {
+              id: subjectContext.id,
+            },
+          },
+        }),
+        this.visitMarkRepository.count({
+          where: {
+            ...visitWhere,
+            state: 1,
+            subject: {
+              id: subjectContext.id,
+            },
+          },
+        }),
+      ]);
+
+      result.push({
+        ...subjectContext,
+        skipCount,
+        totalCount,
+      });
+    }
+
+    return result;
+  }
 
   async getStudentsBySubjectId(subjectId: number) {
     return this.subjectsUserRepository.find({

@@ -11,10 +11,18 @@ export class SubjectsService {
     @InjectRepository(Subject) private subjectRepository: Repository<Subject>,
   ) {}
 
-  async getTeacherSubjects(id: number) {
+  async getTeacherSubjects(userId: number) {
     return this.subjectRepository.find({
       where: {
-        teacher: { userId: id },
+        teacher: { userId },
+      },
+    });
+  }
+
+  async getStudentSubjects(userId: number) {
+    return this.subjectUserRepository.find({
+      where: {
+        student: { userId },
       },
     });
   }

@@ -54,3 +54,8 @@ export class SetMarkStateDto {
   })
   userId: string;
 }
+
+export class GetVisitsDto {
+  subject?: number;
+  group?: number;
+}

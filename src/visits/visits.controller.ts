@@ -6,20 +6,40 @@ import {
   Param,
   HttpCode,
   Put,
+  Req,
+  Inject,
 } from '@nestjs/common';
 import { VisitsService } from './visits.service';
-import { CreateMarkSession, SetMarkStateDto } from './dto';
+import { CreateMarkSession, GetVisitsDto, SetMarkStateDto } from './dto';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { VisitMark } from '../entities';
 import { HttpStatusCode } from 'axios';
 import { Roles } from '../auth/roles.decorator';
 import { UserRolesEnum } from '../common/types';
 import { Public } from '../auth/public.decorator';
+import { Request } from 'express';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Controller('visits')
 @ApiTags('Посещения')
 export class VisitsController {
-  constructor(private readonly visitsService: VisitsService) {}
+  constructor(
+    private readonly visitsService: VisitsService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
+
+  @Post()
+  @ApiOperation({
+    summary: 'Метод для получения данных об успеваемости студентов',
+  })
+  async getVisits(@Body() payload: GetVisitsDto, @Req() request: Request) {
+    const userContext = await this.cacheManager.get<string>(
+      request.headers.authorization.split(' ')[1],
+    );
+
+    return this.visitsService.getVisits(payload, userContext);
+  }
 
   @Post('create-mark-session')
   @Roles(UserRolesEnum.Employer)

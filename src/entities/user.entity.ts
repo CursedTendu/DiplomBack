@@ -6,10 +6,13 @@ import {
   UpdateDateColumn,
   JoinColumn,
   OneToMany,
+  OneToOne,
+  ManyToOne,
 } from 'typeorm';
 import { UserType, userTypeArray } from '../common/types';
 import { Link } from './link.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { Group } from './groups.entity';
 
 @Entity()
 export class User {
@@ -136,4 +139,12 @@ export class User {
   @JoinColumn()
   @OneToMany(() => Link, (link) => link.id)
   link: Link;
+
+  @ApiProperty({
+    name: 'group',
+    description: 'Группа пользователя, если это студент',
+  })
+  @ManyToOne(() => Group, (group) => group.id)
+  @JoinColumn()
+  group: Group;
 }

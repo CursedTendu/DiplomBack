@@ -4,6 +4,7 @@ import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   AttestationScore,
+  GroupUsers,
   Link,
   Subject,
   SubjectsUser,
@@ -15,6 +16,8 @@ import { SubjectsModule } from './subjects/subjects.module';
 import { AuthGuard } from './auth/auth.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { AttestationModule } from './attestation/attestation.module';
+import { Group } from './entities/groups.entity';
+import { GroupsModule } from './groups/groups.module';
 
 @Module({
   imports: [
@@ -33,12 +36,15 @@ import { AttestationModule } from './attestation/attestation.module';
         Subject,
         SubjectsUser,
         AttestationScore,
+        Group,
+        GroupUsers,
       ],
       synchronize: true,
     }),
     VisitsModule,
     SubjectsModule,
     AttestationModule,
+    GroupsModule,
   ],
   controllers: [],
   providers: [

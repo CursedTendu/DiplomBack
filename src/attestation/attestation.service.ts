@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AttestationScore, SubjectsUser, User } from '../entities';
+import { AttestationScore, SubjectsUser, User, VisitMark } from '../entities';
 import { FindOptionsWhere, Repository } from 'typeorm';
 import { AttestationCreatePayload, AttestationUpdatePayload } from './dto';
 
@@ -12,6 +12,8 @@ export class AttestationService {
     private attestationScoreRepository: Repository<AttestationScore>,
     @InjectRepository(SubjectsUser)
     private subjectsUserRepository: Repository<SubjectsUser>,
+    @InjectRepository(VisitMark)
+    private visitMarkRepository: Repository<VisitMark>,
   ) {}
 
   async createAttestation({
@@ -61,8 +63,6 @@ export class AttestationService {
       teacher: { userId: +id },
     };
 
-    console.log(subjectId);
-
     if (subjectId) {
       where.subject = { id: +subjectId };
     }
@@ -72,7 +72,28 @@ export class AttestationService {
       relations: ['subject', 'student'],
     });
 
-    return attestations;
+    const result = [];
+
+    for (const attestation of attestations) {
+      const skipCount = await this.visitMarkRepository.count({
+        where: {
+          student: {
+            id: attestation.student.id,
+          },
+          subject: {
+            id: attestation.subject.id,
+          },
+          state: 0,
+        },
+      });
+
+      result.push({
+        ...attestation,
+        skipCount,
+      });
+    }
+
+    return result;
   }
 
   async updateUserAttestation({
