@@ -1,8 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AttestationScore, SubjectsUser, User, VisitMark } from '../entities';
-import { FindOptionsWhere, Repository } from 'typeorm';
-import { AttestationCreatePayload, AttestationUpdatePayload } from './dto';
+import {
+  AttestationScore,
+  GroupUsers,
+  SubjectsUser,
+  TaskResults,
+  User,
+  VisitMark,
+} from '../entities';
+import { FindOptionsWhere, In, Repository } from 'typeorm';
+import {
+  AttestationCreatePayload,
+  AttestationUpdatePayload,
+  CalculateAttestationDto,
+} from './dto';
 
 @Injectable()
 export class AttestationService {
@@ -14,6 +25,10 @@ export class AttestationService {
     private subjectsUserRepository: Repository<SubjectsUser>,
     @InjectRepository(VisitMark)
     private visitMarkRepository: Repository<VisitMark>,
+    @InjectRepository(TaskResults)
+    private tasksResultRepository: Repository<TaskResults>,
+    @InjectRepository(GroupUsers)
+    private groupUsersRepository: Repository<GroupUsers>,
   ) {}
 
   async createAttestation({
@@ -58,13 +73,31 @@ export class AttestationService {
     return attestations;
   }
 
-  async getTeacherAttestation(id: string, subjectId: string) {
+  async getTeacherAttestation(id: string, subjectId: string, groupId: string) {
     const where: FindOptionsWhere<AttestationScore> = {
       teacher: { userId: +id },
     };
 
     if (subjectId) {
       where.subject = { id: +subjectId };
+    }
+
+    if (groupId) {
+      const groupUsers = await this.groupUsersRepository.find({
+        where: {
+          group: {
+            id: +groupId,
+            teacher: {
+              userId: +id,
+            },
+          },
+        },
+        relations: ['student'],
+      });
+
+      console.log(groupUsers);
+
+      where.student = { id: In(groupUsers.map((user) => user.student.id)) };
     }
 
     const attestations = await this.attestationScoreRepository.find({
@@ -79,9 +112,6 @@ export class AttestationService {
         where: {
           student: {
             id: attestation.student.id,
-          },
-          subject: {
-            id: attestation.subject.id,
           },
           state: 0,
         },
@@ -120,5 +150,62 @@ export class AttestationService {
       ...attestation,
       score: payload.score,
     });
+  }
+
+  async calculateAttestation(
+    payload: CalculateAttestationDto,
+    teacherId: number,
+  ) {
+    const students = await this.groupUsersRepository.find({
+      where: {
+        group: {
+          id: payload.groupId,
+          teacher: {
+            userId: teacherId,
+          },
+        },
+      },
+      relations: ['group', 'group.teacher', 'student'],
+    });
+
+    const result = [];
+
+    if (students.length > 0) {
+      for (const student of students) {
+        const tasks = await this.tasksResultRepository.find({
+          where: {
+            student: {
+              id: student.student.id,
+            },
+            task: {
+              subject: {
+                id: payload.subjectId,
+              },
+            },
+          },
+        });
+
+        const rawPoint = tasks.reduce((acc, curr) => acc + curr.score, 0);
+
+        let attestationScore = 0;
+
+        if (rawPoint >= payload.points.twoPoint) {
+          attestationScore = 2;
+        } else if (rawPoint >= payload.points.onePoint) {
+          attestationScore = 1;
+        }
+
+        result.push({
+          score: attestationScore,
+          student: student.student.id,
+          teacher: student.group.teacher.id,
+          subject: { id: payload.subjectId },
+        });
+      }
+
+      this.attestationScoreRepository.insert(result);
+    }
+
+    return result;
   }
 }

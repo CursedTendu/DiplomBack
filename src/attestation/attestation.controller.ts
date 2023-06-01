@@ -12,7 +12,11 @@ import {
   Req,
 } from '@nestjs/common';
 import { AttestationService } from './attestation.service';
-import { AttestationCreatePayload, AttestationUpdatePayload } from './dto';
+import {
+  AttestationCreatePayload,
+  AttestationUpdatePayload,
+  CalculateAttestationDto,
+} from './dto';
 import { Roles } from '../auth/roles.decorator';
 import { UserRolesEnum } from '../common/types';
 import { Request } from 'express';
@@ -30,6 +34,7 @@ export class AttestationController {
   @Get()
   async getTeacherAttestation(
     @Query('subjectId') subjectId: string,
+    @Query('groupId') groupId: string,
     @Req() request: Request,
   ) {
     const teacherContext = await this.cacheManager.get<string>(
@@ -39,6 +44,7 @@ export class AttestationController {
     return this.attestationService.getTeacherAttestation(
       teacherContext.split('_')[1],
       subjectId,
+      groupId,
     );
   }
 
@@ -67,6 +73,22 @@ export class AttestationController {
     );
 
     return this.attestationService.getUserAttestation(
+      +userContext.split('_')[1],
+    );
+  }
+
+  @Post('calculate')
+  @Roles(UserRolesEnum.Employer)
+  async calculateAttestation(
+    @Body() payload: CalculateAttestationDto,
+    @Req() request: Request,
+  ) {
+    const userContext = await this.cacheManager.get<string>(
+      request.headers.authorization.split(' ')[1],
+    );
+
+    return this.attestationService.calculateAttestation(
+      payload,
       +userContext.split('_')[1],
     );
   }

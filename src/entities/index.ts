@@ -6,3 +6,5 @@ export * from './subjects-user.entity';
 export * from './attestation-score.entity';
 export * from './groups.entity';
 export * from './group-users.entity';
+export * from './task.entity';
+export * from './task-results.entity';

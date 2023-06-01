@@ -8,6 +8,7 @@ import {
   Put,
   Req,
   Inject,
+  HttpStatus,
 } from '@nestjs/common';
 import { VisitsService } from './visits.service';
 import { CreateMarkSession, GetVisitsDto, SetMarkStateDto } from './dto';
@@ -30,6 +31,7 @@ export class VisitsController {
   ) {}
 
   @Post()
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Метод для получения данных об успеваемости студентов',
   })
@@ -39,6 +41,16 @@ export class VisitsController {
     );
 
     return this.visitsService.getVisits(payload, userContext);
+  }
+
+  @Post('more')
+  @HttpCode(HttpStatus.OK)
+  async getMoreVisits(@Body() payload: GetVisitsDto, @Req() request: Request) {
+    const userContext = await this.cacheManager.get<string>(
+      request.headers.authorization.split(' ')[1],
+    );
+
+    return this.visitsService.getMoreVisits(payload, userContext);
   }
 
   @Post('create-mark-session')

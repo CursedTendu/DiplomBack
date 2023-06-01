@@ -6,7 +6,6 @@ import {
   UpdateDateColumn,
   JoinColumn,
   OneToMany,
-  OneToOne,
   ManyToOne,
 } from 'typeorm';
 import { UserType, userTypeArray } from '../common/types';

@@ -10,7 +10,7 @@ import { User } from './user.entity';
 @Entity()
 export class Group {
   @PrimaryGeneratedColumn()
-  id: string;
+  id: number;
 
   @Column()
   title: string;

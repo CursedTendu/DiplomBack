@@ -40,13 +40,13 @@ export class SubjectsController {
   }
 
   @Get('student')
-  @Roles(UserRolesEnum.Employer)
+  @Roles(UserRolesEnum.Student)
   async getStudentSubjects(@Req() request: Request) {
     const teacherContext = await this.cacheManager.get<string>(
       request.headers.authorization.split(' ')[1],
     );
 
-    return this.subjectsService.getTeacherSubjects(
+    return this.subjectsService.getStudentSubjects(
       +teacherContext.split('_')[1],
     );
   }

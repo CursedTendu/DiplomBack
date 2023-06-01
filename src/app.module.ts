@@ -8,6 +8,8 @@ import {
   Link,
   Subject,
   SubjectsUser,
+  Task,
+  TaskResults,
   User,
   VisitMark,
 } from './entities';
@@ -38,6 +40,8 @@ import { GroupsModule } from './groups/groups.module';
         AttestationScore,
         Group,
         GroupUsers,
+        Task,
+        TaskResults,
       ],
       synchronize: true,
     }),

@@ -37,10 +37,6 @@ export class VisitsService {
       where.subject = { id: payload.subject };
     }
 
-    if (payload?.group) {
-      where.subject = {  };
-    }
-
     const subjects = await this.subjectsUserRepository.find({
       where,
       relations: ['subject', 'subject.teacher', 'student'],
@@ -52,19 +48,23 @@ export class VisitsService {
       const [skipCount, totalCount] = await Promise.all([
         this.visitMarkRepository.count({
           where: {
-            ...visitWhere,
             state: 0,
             subject: {
-              id: subjectContext.id,
+              id: payload.subject,
+            },
+            student: {
+              id: subjectContext.student.id,
             },
           },
         }),
         this.visitMarkRepository.count({
           where: {
-            ...visitWhere,
             state: 1,
             subject: {
-              id: subjectContext.id,
+              id: payload.subject,
+            },
+            student: {
+              id: subjectContext.student.id,
             },
           },
         }),
@@ -78,6 +78,30 @@ export class VisitsService {
     }
 
     return result;
+  }
+
+  async getMoreVisits(payload: GetVisitsDto, user: string) {
+    console.log(user);
+
+    const [role, userId] = user.split('_');
+
+    if (role === 'сотрудник') {
+      // сотрудник
+    }
+
+    if (role === 'обучающийся') {
+      return await this.visitMarkRepository.find({
+        where: {
+          student: {
+            userId: +userId,
+          },
+          subject: {
+            id: payload.subject,
+          },
+        },
+        relations: ['subject', 'link'],
+      });
+    }
   }
 
   async getStudentsBySubjectId(subjectId: number) {

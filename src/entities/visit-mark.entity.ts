@@ -4,6 +4,8 @@ import {
   JoinColumn,
   ManyToOne,
   Column,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { User } from './user.entity';
 import { Link } from './link.entity';
@@ -68,4 +70,10 @@ export class VisitMark {
   @JoinColumn()
   @ManyToOne(() => Subject, (subject) => subject.id)
   subject?: Subject;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

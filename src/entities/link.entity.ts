@@ -38,7 +38,7 @@ export class Link {
   })
   @JoinColumn()
   @OneToMany(() => VisitMark, (mark) => mark.id)
-  mark?: VisitMark[];
+  mark?: VisitMark;
 
   @ApiProperty({
     name: 'createdAt',
