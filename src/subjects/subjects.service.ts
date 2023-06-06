@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SubjectsUser, Subject } from '../entities';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 
 @Injectable()
 export class SubjectsService {
@@ -11,11 +11,17 @@ export class SubjectsService {
     @InjectRepository(Subject) private subjectRepository: Repository<Subject>,
   ) {}
 
-  async getTeacherSubjects(userId: number) {
+  async getTeacherSubjects(userId: number, groupId: number) {
+    const where: FindOptionsWhere<Subject> = {
+      teacher: { userId },
+    };
+
+    if (groupId) {
+      where.group = { id: groupId };
+    }
+
     return this.subjectRepository.find({
-      where: {
-        teacher: { userId },
-      },
+      where,
     });
   }
 

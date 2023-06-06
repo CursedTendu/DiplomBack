@@ -26,6 +26,8 @@ export class VisitsService {
     if (role === 'сотрудник') {
       where.subject = { teacher: { userId: +userId } };
       visitWhere.subject = { teacher: { userId: +userId } };
+      visitWhere.student = { group: { id: payload?.group } };
+      where.student = { group: { id: payload?.group } };
     }
 
     if (role === 'обучающийся') {
@@ -50,7 +52,7 @@ export class VisitsService {
           where: {
             state: 0,
             subject: {
-              id: payload.subject,
+              id: role === 'сотрудник' ? payload?.subject : subjectContext.id,
             },
             student: {
               id: subjectContext.student.id,
@@ -61,7 +63,7 @@ export class VisitsService {
           where: {
             state: 1,
             subject: {
-              id: payload.subject,
+              id: role === 'сотрудник' ? payload?.subject : subjectContext.id,
             },
             student: {
               id: subjectContext.student.id,
@@ -81,12 +83,20 @@ export class VisitsService {
   }
 
   async getMoreVisits(payload: GetVisitsDto, user: string) {
-    console.log(user);
-
     const [role, userId] = user.split('_');
 
     if (role === 'сотрудник') {
-      // сотрудник
+      return await this.visitMarkRepository.find({
+        where: {
+          teacher: {
+            userId: +userId,
+          },
+          subject: {
+            id: payload.subject,
+          },
+        },
+        relations: ['subject', 'link'],
+      });
     }
 
     if (role === 'обучающийся') {

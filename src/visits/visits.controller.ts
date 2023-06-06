@@ -35,6 +35,7 @@ export class VisitsController {
   @ApiOperation({
     summary: 'Метод для получения данных об успеваемости студентов',
   })
+  @Public()
   async getVisits(@Body() payload: GetVisitsDto, @Req() request: Request) {
     const userContext = await this.cacheManager.get<string>(
       request.headers.authorization.split(' ')[1],

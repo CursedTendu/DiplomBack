@@ -5,6 +5,7 @@ import {
   Inject,
   Param,
   Post,
+  Query,
   Req,
 } from '@nestjs/common';
 import { SubjectsService } from './subjects.service';
@@ -29,13 +30,17 @@ export class SubjectsController {
 
   @Get('teacher')
   @Roles(UserRolesEnum.Employer)
-  async getTeacherSubjects(@Req() request: Request) {
+  async getTeacherSubjects(
+    @Req() request: Request,
+    @Query('groupId') groupId: string,
+  ) {
     const teacherContext = await this.cacheManager.get<string>(
       request.headers.authorization.split(' ')[1],
     );
 
     return this.subjectsService.getTeacherSubjects(
       +teacherContext.split('_')[1],
+      +groupId,
     );
   }
 

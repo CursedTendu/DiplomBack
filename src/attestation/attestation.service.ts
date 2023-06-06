@@ -77,9 +77,13 @@ export class AttestationService {
     const where: FindOptionsWhere<AttestationScore> = {
       teacher: { userId: +id },
     };
+    const visitWhere: FindOptionsWhere<VisitMark> = {
+      teacher: { userId: +id },
+    };
 
     if (subjectId) {
       where.subject = { id: +subjectId };
+      visitWhere.subject = { id: +subjectId };
     }
 
     if (groupId) {
@@ -95,8 +99,6 @@ export class AttestationService {
         relations: ['student'],
       });
 
-      console.log(groupUsers);
-
       where.student = { id: In(groupUsers.map((user) => user.student.id)) };
     }
 
@@ -108,8 +110,9 @@ export class AttestationService {
     const result = [];
 
     for (const attestation of attestations) {
-      const skipCount = await this.visitMarkRepository.count({
+      const skips = await this.visitMarkRepository.find({
         where: {
+          ...visitWhere,
           student: {
             id: attestation.student.id,
           },
@@ -117,9 +120,13 @@ export class AttestationService {
         },
       });
 
+      if (skips.length === 0) {
+        continue;
+      }
+
       result.push({
         ...attestation,
-        skipCount,
+        skipCount: skips.length,
       });
     }
 
